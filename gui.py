@@ -361,7 +361,7 @@ class RobloxMacroApp(ctk.CTk):
 
         mouse_info = ctk.CTkLabel(
             cfg_card,
-            text="Mouse clicks are always recorded (left/right/middle + position). You must click in-game while recording.",
+            text="Mouse clicks and scroll wheel are always recorded (position + direction). You must click/scroll in-game while recording.",
             font=ctk.CTkFont(size=12),
             text_color=SUBTEXT_COLOR,
             wraplength=780,

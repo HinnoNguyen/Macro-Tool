@@ -14,7 +14,10 @@ MOUSEEVENTF_RIGHTDOWN = 0x0008
 MOUSEEVENTF_RIGHTUP = 0x0010
 MOUSEEVENTF_MIDDLEDOWN = 0x0020
 MOUSEEVENTF_MIDDLEUP = 0x0040
+MOUSEEVENTF_WHEEL = 0x0800
+MOUSEEVENTF_HWHEEL = 0x0100
 MOUSEEVENTF_ABSOLUTE = 0x8000
+WHEEL_DELTA = 120
 
 _BUTTON_DOWN = {
     "left": MOUSEEVENTF_LEFTDOWN,
@@ -70,14 +73,14 @@ _extra_info_ptr = ctypes.pointer(_extra_info)
 _send_input = ctypes.windll.user32.SendInput
 
 
-def _send_mouse(flags, dx=0, dy=0):
+def _send_mouse(flags, dx=0, dy=0, mouse_data=0):
     inp = INPUT(
         type=INPUT_MOUSE,
         union=INPUT_UNION(
             mi=MOUSEINPUT(
                 dx=dx,
                 dy=dy,
-                mouseData=0,
+                mouseData=mouse_data,
                 dwFlags=flags,
                 time=0,
                 dwExtraInfo=_extra_info_ptr,
@@ -117,6 +120,24 @@ def win32_click(button_name, count=1):
         win32_button(button_name, False)
         if count > 1:
             time.sleep(0.02)
+
+
+def _scroll_delta(value):
+    value = int(value)
+    if value == 0:
+        return 0
+    if abs(value) < 20:
+        return value * WHEEL_DELTA
+    return value
+
+
+def win32_scroll(dx=0, dy=0):
+    dy_delta = _scroll_delta(dy)
+    if dy_delta != 0:
+        _send_mouse(MOUSEEVENTF_WHEEL, 0, 0, dy_delta)
+    dx_delta = _scroll_delta(dx)
+    if dx_delta != 0:
+        _send_mouse(MOUSEEVENTF_HWHEEL, 0, 0, dx_delta)
 
 
 def button_name_from_event(event):
@@ -301,6 +322,7 @@ class MacroRecorder:
 
             self.mouse_listener = mouse.Listener(
                 on_click=self._on_click,
+                on_scroll=self._on_scroll,
                 on_move=self._on_move if self.record_mouse_move else None
             )
             self.keyboard_listener = keyboard.Listener(
@@ -344,6 +366,19 @@ class MacroRecorder:
             "type": "mouse_move",
             "x": x,
             "y": y,
+            "time": elapsed
+        })
+
+    def _on_scroll(self, x, y, dx, dy):
+        if not self.is_recording:
+            return
+        elapsed = time.time() - self.start_time
+        self.events.append({
+            "type": "mouse_scroll",
+            "x": x,
+            "y": y,
+            "dx": dx,
+            "dy": dy,
             "time": elapsed
         })
 
@@ -502,6 +537,11 @@ class MacroPlayer:
                 self._play_right_held = pressed
         elif etype == "mouse_move":
             self._move_playback_cursor(event["x"], event["y"])
+        elif etype == "mouse_scroll":
+            x, y = event["x"], event["y"]
+            if self._play_mouse_x != x or self._play_mouse_y != y:
+                self._move_playback_cursor(x, y)
+            win32_scroll(event.get("dx", 0), event.get("dy", 0))
         elif etype == "key_press":
             key = deserialize_key(event["key"])
             keyboard_controller.press(key)
