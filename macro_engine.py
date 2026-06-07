@@ -2,7 +2,125 @@ import time
 import threading
 import json
 import ctypes
+from ctypes import wintypes
 from pynput import mouse, keyboard
+
+# --- Win32 SendInput (better Roblox compatibility, especially right-mouse drag) ---
+INPUT_MOUSE = 0
+MOUSEEVENTF_MOVE = 0x0001
+MOUSEEVENTF_LEFTDOWN = 0x0002
+MOUSEEVENTF_LEFTUP = 0x0004
+MOUSEEVENTF_RIGHTDOWN = 0x0008
+MOUSEEVENTF_RIGHTUP = 0x0010
+MOUSEEVENTF_MIDDLEDOWN = 0x0020
+MOUSEEVENTF_MIDDLEUP = 0x0040
+MOUSEEVENTF_ABSOLUTE = 0x8000
+
+_BUTTON_DOWN = {
+    "left": MOUSEEVENTF_LEFTDOWN,
+    "right": MOUSEEVENTF_RIGHTDOWN,
+    "middle": MOUSEEVENTF_MIDDLEDOWN,
+}
+_BUTTON_UP = {
+    "left": MOUSEEVENTF_LEFTUP,
+    "right": MOUSEEVENTF_RIGHTUP,
+    "middle": MOUSEEVENTF_MIDDLEUP,
+}
+
+
+class MOUSEINPUT(ctypes.Structure):
+    _fields_ = [
+        ("dx", wintypes.LONG),
+        ("dy", wintypes.LONG),
+        ("mouseData", wintypes.DWORD),
+        ("dwFlags", wintypes.DWORD),
+        ("time", wintypes.DWORD),
+        ("dwExtraInfo", ctypes.POINTER(ctypes.c_ulong)),
+    ]
+
+
+class KEYBDINPUT(ctypes.Structure):
+    _fields_ = [
+        ("wVk", wintypes.WORD),
+        ("wScan", wintypes.WORD),
+        ("dwFlags", wintypes.DWORD),
+        ("time", wintypes.DWORD),
+        ("dwExtraInfo", ctypes.POINTER(ctypes.c_ulong)),
+    ]
+
+
+class HARDWAREINPUT(ctypes.Structure):
+    _fields_ = [
+        ("uMsg", wintypes.DWORD),
+        ("wParamL", wintypes.WORD),
+        ("wParamH", wintypes.WORD),
+    ]
+
+
+class INPUT_UNION(ctypes.Union):
+    _fields_ = [("mi", MOUSEINPUT), ("ki", KEYBDINPUT), ("hi", HARDWAREINPUT)]
+
+
+class INPUT(ctypes.Structure):
+    _fields_ = [("type", wintypes.DWORD), ("union", INPUT_UNION)]
+
+
+_extra_info = ctypes.c_ulong(0)
+_extra_info_ptr = ctypes.pointer(_extra_info)
+_send_input = ctypes.windll.user32.SendInput
+
+
+def _send_mouse(flags, dx=0, dy=0):
+    inp = INPUT(
+        type=INPUT_MOUSE,
+        union=INPUT_UNION(
+            mi=MOUSEINPUT(
+                dx=dx,
+                dy=dy,
+                mouseData=0,
+                dwFlags=flags,
+                time=0,
+                dwExtraInfo=_extra_info_ptr,
+            )
+        ),
+    )
+    _send_input(1, ctypes.byref(inp), ctypes.sizeof(INPUT))
+
+
+def win32_move_absolute(x, y):
+    screen_w = ctypes.windll.user32.GetSystemMetrics(0)
+    screen_h = ctypes.windll.user32.GetSystemMetrics(1)
+    if screen_w <= 1 or screen_h <= 1:
+        return
+    nx = int(x * 65535 / max(screen_w - 1, 1))
+    ny = int(y * 65535 / max(screen_h - 1, 1))
+    _send_mouse(MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE, nx, ny)
+
+
+def win32_move_relative(dx, dy):
+    if dx == 0 and dy == 0:
+        return
+    _send_mouse(MOUSEEVENTF_MOVE, int(dx), int(dy))
+
+
+def win32_button(button_name, pressed):
+    flags = _BUTTON_DOWN if pressed else _BUTTON_UP
+    flag = flags.get(button_name)
+    if flag is not None:
+        _send_mouse(flag)
+
+
+def win32_click(button_name, count=1):
+    for _ in range(max(count, 1)):
+        win32_button(button_name, True)
+        time.sleep(0.01)
+        win32_button(button_name, False)
+        if count > 1:
+            time.sleep(0.02)
+
+
+def button_name_from_event(event):
+    return event.get("button", "Button.left").split(".")[1]
 
 # Helper to check active window
 def get_active_window_title():
@@ -99,10 +217,11 @@ class AutoClicker:
         while self.running:
             if not self.roblox_only or is_roblox_active():
                 try:
+                    button_name = self.button.name
                     if self.double_click:
-                        mouse_controller.click(self.button, 2)
+                        win32_click(button_name, 2)
                     else:
-                        mouse_controller.click(self.button, 1)
+                        win32_click(button_name, 1)
                 except Exception as e:
                     print(f"Auto-clicker error: {e}")
             time.sleep(self.interval)
@@ -291,6 +410,9 @@ class MacroPlayer:
 
             start_play_time = time.time()
             event_idx = 0
+            self._play_mouse_x = None
+            self._play_mouse_y = None
+            self._play_right_held = False
             
             while event_idx < len(self.events) and self.running:
                 if self.roblox_only and not is_roblox_active():
@@ -347,26 +469,39 @@ class MacroPlayer:
             and press_event.get("button") == release_event.get("button")
         )
 
+    def _move_playback_cursor(self, x, y):
+        if self._play_right_held and self._play_mouse_x is not None and self._play_mouse_y is not None:
+            win32_move_relative(x - self._play_mouse_x, y - self._play_mouse_y)
+        else:
+            win32_move_absolute(x, y)
+        self._play_mouse_x = x
+        self._play_mouse_y = y
+
     def _execute_event(self, event, next_event=None):
         etype = event["type"]
         if etype == "mouse_click":
             x, y = event["x"], event["y"]
-            button = deserialize_button(event["button"])
+            button_name = button_name_from_event(event)
             pressed = event["pressed"]
-            mouse_controller.position = (x, y)
+
             if (
                 pressed
                 and next_event is not None
                 and self._is_simple_click_pair(event, next_event)
             ):
-                mouse_controller.click(button, 1)
-            elif pressed:
-                mouse_controller.press(button)
-            else:
-                mouse_controller.release(button)
+                self._move_playback_cursor(x, y)
+                win32_click(button_name, 1)
+                return
+
+            if not (self._play_right_held and button_name == "right" and not pressed):
+                if self._play_mouse_x != x or self._play_mouse_y != y:
+                    self._move_playback_cursor(x, y)
+
+            win32_button(button_name, pressed)
+            if button_name == "right":
+                self._play_right_held = pressed
         elif etype == "mouse_move":
-            x, y = event["x"], event["y"]
-            mouse_controller.position = (x, y)
+            self._move_playback_cursor(event["x"], event["y"])
         elif etype == "key_press":
             key = deserialize_key(event["key"])
             keyboard_controller.press(key)
