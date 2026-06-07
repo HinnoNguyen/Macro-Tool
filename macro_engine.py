@@ -311,6 +311,21 @@ class MacroPlayer:
                         time.sleep(sleep_time)
 
                 try:
+                    next_event = (
+                        self.events[event_idx + 1]
+                        if event_idx + 1 < len(self.events)
+                        else None
+                    )
+                    if (
+                        event.get("type") == "mouse_click"
+                        and event.get("pressed") is True
+                        and next_event is not None
+                        and self._is_simple_click_pair(event, next_event)
+                    ):
+                        self._execute_event(event, next_event)
+                        event_idx += 2
+                        continue
+
                     self._execute_event(event)
                 except Exception as e:
                     print(f"Playback execute error: {e}")
@@ -321,14 +336,31 @@ class MacroPlayer:
                 self.running = False
                 break
 
-    def _execute_event(self, event):
+    def _is_simple_click_pair(self, press_event, release_event):
+        return (
+            press_event.get("type") == "mouse_click"
+            and press_event.get("pressed") is True
+            and release_event.get("type") == "mouse_click"
+            and release_event.get("pressed") is False
+            and press_event.get("x") == release_event.get("x")
+            and press_event.get("y") == release_event.get("y")
+            and press_event.get("button") == release_event.get("button")
+        )
+
+    def _execute_event(self, event, next_event=None):
         etype = event["type"]
         if etype == "mouse_click":
             x, y = event["x"], event["y"]
             button = deserialize_button(event["button"])
             pressed = event["pressed"]
             mouse_controller.position = (x, y)
-            if pressed:
+            if (
+                pressed
+                and next_event is not None
+                and self._is_simple_click_pair(event, next_event)
+            ):
+                mouse_controller.click(button, 1)
+            elif pressed:
                 mouse_controller.press(button)
             else:
                 mouse_controller.release(button)

@@ -359,16 +359,26 @@ class RobloxMacroApp(ctk.CTk):
         cfg_card = ctk.CTkFrame(frame, fg_color=BG_COLOR, corner_radius=8)
         cfg_card.pack(fill="x", padx=25, pady=10)
 
+        mouse_info = ctk.CTkLabel(
+            cfg_card,
+            text="Mouse clicks are always recorded (left/right/middle + position). You must click in-game while recording.",
+            font=ctk.CTkFont(size=12),
+            text_color=SUBTEXT_COLOR,
+            wraplength=780,
+            justify="left",
+        )
+        mouse_info.pack(anchor="w", padx=15, pady=(10, 5))
+
         self.rec_mouse_move_var = tk.BooleanVar(value=False)
         self.rec_mouse_move_chk = ctk.CTkCheckBox(
             cfg_card, 
-            text="Record Mouse Movements (causes larger files, not needed for simple click/keys)", 
+            text="Also record mouse movement between clicks (optional, larger files — for camera/drag paths)", 
             variable=self.rec_mouse_move_var,
             checkmark_color=BG_COLOR,
             fg_color=CYAN,
             hover_color=BLUE
         )
-        self.rec_mouse_move_chk.pack(anchor="w", padx=15, pady=10)
+        self.rec_mouse_move_chk.pack(anchor="w", padx=15, pady=(0, 10))
 
         self.player_loop_var = tk.BooleanVar(value=False)
         self.player_loop_chk = ctk.CTkCheckBox(
