@@ -4,6 +4,9 @@
 
 **Roblox Neo Macro** is a modern, high-performance, and feature-rich desktop automation app built using Python, CustomTkinter, and Pynput. It features a sleek Catppuccin Mocha dark theme with emerald green, neon cyan, and rose accents, tailored specifically for Roblox gamers.
 
+> [!IMPORTANT]
+> 💻 **Platform Support**: **Windows Only**. This tool relies on Windows active window APIs (`ctypes.windll.user32`) for Roblox process targeting and is configured with Windows batch launch scripts.
+
 ## ✨ Features
 1. **🖱️ Auto Clicker**: Click speeds from 1 to 100 CPS, support for Left/Right/Middle clicks, double clicks, and auto-pause when Alt-Tabbed out of Roblox.
 2. **⌨️ Key Spammer**: Spam single keys (e.g. `space`, `e`) or custom sequences (e.g., `w,s` to walk back and forth) with custom delay intervals.
@@ -27,6 +30,9 @@
 ## Tiếng Việt
 
 **Roblox Neo Macro** là ứng dụng tự động hóa dành cho máy tính được phát triển bằng Python, CustomTkinter và Pynput với giao diện tối tối hiện đại màu Catppuccin Mocha cực kỳ đẹp mắt.
+
+> [!IMPORTANT]
+> 💻 **Hỗ trợ hệ điều hành**: **Chỉ hỗ trợ Windows**. Công cụ này sử dụng API kiểm tra cửa sổ hoạt động của Windows (`ctypes.windll.user32`) để tự động nhận diện game Roblox và đi kèm tệp khởi chạy nhanh `.bat` riêng cho Windows.
 
 ## ✨ Tính năng nổi bật
 1. **🖱️ Auto Clicker**: Tốc độ từ 1 đến 100 CPS, chuột Trái/Phải/Giữa, double click, tự động tạm dừng khi chuyển cửa sổ khỏi Roblox.
