@@ -48,20 +48,20 @@ class RobloxMacroApp(ctk.CTk):
         self.recorder = MacroRecorder()
         self.player = MacroPlayer()
 
-        # Configurable Hotkeys (Defaults)
-        self.hotkeys = {
-            "clicker": keyboard.Key.f6,
-            "spammer": keyboard.Key.f7,
-            "recorder": keyboard.Key.f8,
-            "player": keyboard.Key.f9
-        }
-        
-        # UI Strings for hotkeys
+        # UI Strings for hotkeys (defaults)
         self.hotkey_strings = {
             "clicker": "F6",
             "spammer": "F7",
             "recorder": "F8",
             "player": "F9"
+        }
+        
+        # Parsed strings for pynput GlobalHotKeys
+        self.hotkeys_parsed = {
+            "clicker": "<f6>",
+            "spammer": "<f7>",
+            "recorder": "<f8>",
+            "player": "<f9>"
         }
 
         # Keep track of hotkey listening state
@@ -83,18 +83,31 @@ class RobloxMacroApp(ctk.CTk):
         self.update_status_loop()
 
     def start_hotkey_listener(self):
-        self.hotkey_listener = keyboard.Listener(on_press=self.handle_global_key)
-        self.hotkey_listener.start()
+        if self.hotkey_listener:
+            try:
+                self.hotkey_listener.stop()
+            except Exception:
+                pass
+            self.hotkey_listener = None
 
-    def handle_global_key(self, key):
-        if key == self.hotkeys["clicker"]:
-            self.after(0, self.toggle_clicker)
-        elif key == self.hotkeys["spammer"]:
-            self.after(0, self.toggle_spammer)
-        elif key == self.hotkeys["recorder"]:
-            self.after(0, self.toggle_recorder)
-        elif key == self.hotkeys["player"]:
-            self.after(0, self.toggle_player)
+        mapping = {
+            self.hotkeys_parsed["clicker"]: self.toggle_clicker,
+            self.hotkeys_parsed["spammer"]: self.toggle_spammer,
+            self.hotkeys_parsed["recorder"]: self.toggle_recorder,
+            self.hotkeys_parsed["player"]: self.toggle_player
+        }
+
+        # Safe tkinter wrapper to run callbacks in main thread
+        def wrap_action(action_func):
+            return lambda: self.after(0, action_func)
+
+        wrapped_mapping = {k: wrap_action(v) for k, v in mapping.items()}
+
+        try:
+            self.hotkey_listener = keyboard.GlobalHotKeys(wrapped_mapping)
+            self.hotkey_listener.start()
+        except Exception as e:
+            print(f"Error starting global hotkey listener: {e}")
 
     # ================= UI SETUP =================
 
@@ -632,21 +645,103 @@ class RobloxMacroApp(ctk.CTk):
         self.frames[tab_id].pack(fill="both", expand=True)
 
     def change_hotkey_flow(self, action_id):
-        self.hotkey_buttons[action_id].configure(text="Press F1-F12...", fg_color=RED)
-        
-        def on_press_temp(key):
-            if isinstance(key, keyboard.Key) and key.name.startswith('f'):
-                self.hotkeys[action_id] = key
-                self.hotkey_strings[action_id] = key.name.upper()
-                self.after(0, lambda: self.hotkey_buttons[action_id].configure(text=key.name.upper(), fg_color=DARK_GRAY))
-                self.after(0, self.update_start_stop_button_hotkeys)
-                return False
-            else:
-                self.after(0, lambda: self.hotkey_buttons[action_id].configure(text=self.hotkey_strings[action_id], fg_color=DARK_GRAY))
+        # Stop main listener during capture
+        if self.hotkey_listener:
+            self.hotkey_listener.stop()
+            self.hotkey_listener = None
+
+        self.hotkey_buttons[action_id].configure(text="Press Keys...", fg_color=RED)
+
+        # Temporary modifiers state
+        self.temp_modifiers = {"ctrl": False, "alt": False, "shift": False}
+
+        def on_press(key):
+            # Track modifiers
+            if key in [keyboard.Key.ctrl, keyboard.Key.ctrl_l, keyboard.Key.ctrl_r]:
+                self.temp_modifiers["ctrl"] = True
+                return
+            if key in [keyboard.Key.alt, keyboard.Key.alt_l, keyboard.Key.alt_r, keyboard.Key.alt_gr]:
+                self.temp_modifiers["alt"] = True
+                return
+            if key in [keyboard.Key.shift, keyboard.Key.shift_l, keyboard.Key.shift_r]:
+                self.temp_modifiers["shift"] = True
+                return
+
+            # Cancel on Escape
+            if key == keyboard.Key.esc:
+                self.after(0, lambda: self.cancel_hotkey_change(action_id))
                 return False
 
-        temp_listener = keyboard.Listener(on_press=on_press_temp)
-        temp_listener.start()
+            # Retrieve key name
+            key_name = ""
+            if isinstance(key, keyboard.Key):
+                key_name = key.name
+            elif hasattr(key, 'char') and key.char is not None:
+                key_name = key.char
+            elif hasattr(key, 'vk') and key.vk is not None:
+                key_name = f"vk_{key.vk}"
+            else:
+                key_name = str(key)
+
+            display_parts = []
+            parsed_parts = []
+
+            # Add tracked modifiers
+            if self.temp_modifiers["ctrl"]:
+                display_parts.append("Ctrl")
+                parsed_parts.append("<ctrl>")
+            if self.temp_modifiers["alt"]:
+                display_parts.append("Alt")
+                parsed_parts.append("<alt>")
+            if self.temp_modifiers["shift"]:
+                display_parts.append("Shift")
+                parsed_parts.append("<shift>")
+
+            # Add base key
+            if key_name:
+                key_name_lower = key_name.lower()
+                # If key is standard function key
+                if key_name_lower.startswith('f') and key_name_lower[1:].isdigit():
+                    display_parts.append(key_name.upper())
+                    parsed_parts.append(f"<{key_name_lower}>")
+                elif key_name_lower in ["space", "enter", "tab", "backspace", "delete"]:
+                    display_parts.append(key_name.capitalize())
+                    parsed_parts.append(f"<{key_name_lower}>")
+                else:
+                    display_parts.append(key_name.upper())
+                    parsed_parts.append(key_name_lower)
+
+            parsed_str = "+".join(parsed_parts)
+            display_str = "+".join(display_parts)
+
+            # Store mapping
+            self.hotkeys_parsed[action_id] = parsed_str
+            self.hotkey_strings[action_id] = display_str
+
+            self.after(0, lambda: self.finalize_hotkey_change(action_id, display_str))
+            return False
+
+        def on_release(key):
+            # Untrack modifiers on release
+            if key in [keyboard.Key.ctrl, keyboard.Key.ctrl_l, keyboard.Key.ctrl_r]:
+                self.temp_modifiers["ctrl"] = False
+            elif key in [keyboard.Key.alt, keyboard.Key.alt_l, keyboard.Key.alt_r, keyboard.Key.alt_gr]:
+                self.temp_modifiers["alt"] = False
+            elif key in [keyboard.Key.shift, keyboard.Key.shift_l, keyboard.Key.shift_r]:
+                self.temp_modifiers["shift"] = False
+
+        self.temp_listener = keyboard.Listener(on_press=on_press, on_release=on_release)
+        self.temp_listener.start()
+
+    def cancel_hotkey_change(self, action_id):
+        old_display = self.hotkey_strings[action_id]
+        self.hotkey_buttons[action_id].configure(text=old_display, fg_color=DARK_GRAY)
+        self.start_hotkey_listener()
+
+    def finalize_hotkey_change(self, action_id, display_str):
+        self.hotkey_buttons[action_id].configure(text=display_str, fg_color=DARK_GRAY)
+        self.update_start_stop_button_hotkeys()
+        self.start_hotkey_listener()
 
     def update_start_stop_button_hotkeys(self):
         c_hk = self.hotkey_strings["clicker"]
