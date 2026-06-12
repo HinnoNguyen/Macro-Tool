@@ -6,6 +6,7 @@ import tkinter as tk
 from tkinter import filedialog, messagebox
 import customtkinter as ctk
 from pynput import keyboard
+from PIL import Image, ImageTk
 
 # Import our macro classes
 from macro_engine import (
@@ -41,6 +42,18 @@ class RobloxMacroApp(ctk.CTk):
         self.geometry("900x600")
         self.resizable(False, False)
         self.configure(fg_color=BG_COLOR)
+
+        # Set Window Icon
+        try:
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            icon_path = os.path.join(current_dir, "logo.jpg")
+            if os.path.exists(icon_path):
+                img = Image.open(icon_path)
+                photo = ImageTk.PhotoImage(img)
+                self.iconphoto(False, photo)
+                self._icon = photo  # Keep reference to prevent garbage collection
+        except Exception as e:
+            print(f"Failed to load window icon: {e}")
 
         # Initialize engines
         self.clicker = AutoClicker()
