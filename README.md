@@ -50,6 +50,15 @@
 
 ---
 
+## 📋 Requirements
+- **Operating System**: Windows 10 or 11 (64-bit).
+- **Python Version**: Python 3.9+ (make sure it's added to System PATH).
+- **Required Packages**:
+  - `customtkinter` (for modern dark GUI)
+  - `pynput` (for mouse & keyboard interaction)
+
+---
+
 ## 🚀 How to Run
 1. Install requirements:
    ```bash
@@ -111,6 +120,15 @@
 - **CustomTkinter**: Thư viện thiết kế giao diện đồ họa (GUI) hiện đại với giao diện Dark theme.
 - **Pynput**: Thư viện theo dõi và giả lập các thao tác bấm phím/click chuột toàn hệ thống.
 - **ctypes**: Sử dụng Win32 API để kiểm tra cửa sổ Roblox đang hoạt động và truyền tín hiệu mô phỏng chính xác.
+
+---
+
+## 📋 Yêu cầu hệ thống (Requirements)
+- **Hệ điều hành**: Windows 10 hoặc 11 (64-bit).
+- **Phiên bản Python**: Python 3.9 trở lên (đã cấu hình thêm vào biến môi trường PATH).
+- **Các thư viện yêu cầu**:
+  - `customtkinter` (cho giao diện tối hiện đại)
+  - `pynput` (cho tương tác chuột và phím)
 
 ---
 
