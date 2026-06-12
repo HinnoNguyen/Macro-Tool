@@ -37,7 +37,7 @@ class RobloxMacroApp(ctk.CTk):
         super().__init__()
 
         # Configure Window
-        self.title("Roblox Neo Macro - Ultimate Automation")
+        self.title("Roblox TDS Macro - Tower Defense Simulator Automation")
         self.geometry("900x600")
         self.resizable(False, False)
         self.configure(fg_color=BG_COLOR)
@@ -118,7 +118,7 @@ class RobloxMacroApp(ctk.CTk):
 
         self.title_lbl = ctk.CTkLabel(
             self.sidebar, 
-            text="🎮 NEO MACRO", 
+            text="🎮 TDS MACRO", 
             font=ctk.CTkFont(size=20, weight="bold"), 
             text_color=CYAN
         )
@@ -126,7 +126,7 @@ class RobloxMacroApp(ctk.CTk):
 
         self.subtitle_lbl = ctk.CTkLabel(
             self.sidebar, 
-            text="Roblox Edition", 
+            text="TDS Specialty Edition", 
             font=ctk.CTkFont(size=12, slant="italic"), 
             text_color=SUBTEXT_COLOR
         )
@@ -369,7 +369,7 @@ class RobloxMacroApp(ctk.CTk):
         )
         mouse_info.pack(anchor="w", padx=15, pady=(10, 5))
 
-        self.rec_mouse_move_var = tk.BooleanVar(value=False)
+        self.rec_mouse_move_var = tk.BooleanVar(value=True)
         self.rec_mouse_move_chk = ctk.CTkCheckBox(
             cfg_card, 
             text="Also record mouse movement between clicks (optional, larger files — for camera/drag paths)", 
@@ -380,7 +380,7 @@ class RobloxMacroApp(ctk.CTk):
         )
         self.rec_mouse_move_chk.pack(anchor="w", padx=15, pady=(0, 10))
 
-        self.player_loop_var = tk.BooleanVar(value=False)
+        self.player_loop_var = tk.BooleanVar(value=True)
         self.player_loop_chk = ctk.CTkCheckBox(
             cfg_card, 
             text="Loop Playback", 
@@ -519,24 +519,24 @@ class RobloxMacroApp(ctk.CTk):
 
         presets_list = [
             {
-                "title": "🛡️ AFK Anti-Kick (Anti-AFK)",
-                "desc": "Spams Jump (Space) every 30 seconds. Prevents disconnection from any game due to being idle for 20 minutes.",
+                "title": "🛡️ TDS Anti-AFK (Keep Connected)",
+                "desc": "Spams Jump (Space) every 30 seconds to prevent getting disconnected from long TDS matches.",
                 "action": lambda: self.load_preset_anti_afk()
             },
             {
-                "title": "⚡ Hyper Clicks (100 CPS)",
-                "desc": "Configures the Auto Clicker for ultra-fast 100 clicks per second. Great for clicker games.",
+                "title": "⏩ TDS Auto Skip Wave (F-Spam)",
+                "desc": "Configures Key Spammer to spam the 'f' key every 1.0s to instantly skip waves when voting is available.",
+                "action": lambda: self.load_preset_tds_skip()
+            },
+            {
+                "title": "📣 TDS Commander/DJ Ability Chain (1, 2, 3)",
+                "desc": "Configures Key Spammer to spam keys '1, 2, 3' sequentially every 10.0s to chain DJ or Commander abilities.",
+                "action": lambda: self.load_preset_tds_abilities()
+            },
+            {
+                "title": "⚡ TDS Fast Upgrade/Placement (100 CPS)",
+                "desc": "Configures the Auto Clicker for ultra-fast 100 clicks per second (Left Click) to spam tower placements/upgrades.",
                 "action": lambda: self.load_preset_fast_click()
-            },
-            {
-                "title": "🐝 Bee Swarm Auto-Harvest Spammer",
-                "desc": "Configures the clicker to 15 CPS and Key Spammer to spam 'e' interaction key every 0.5s.",
-                "action": lambda: self.load_preset_bee_swarm()
-            },
-            {
-                "title": "🏃 Anti-Idle Movement (W-S Dance)",
-                "desc": "Spams W and S key sequentially every 2 seconds. Excellent for games where jumping might trigger actions.",
-                "action": lambda: self.load_preset_dance_afk()
             }
         ]
 
@@ -931,7 +931,7 @@ class RobloxMacroApp(ctk.CTk):
         self.spammer_interval_slider.set(30.0)
         self.update_interval_val()
         self.spammer_roblox_chk.select()
-        messagebox.showinfo("Preset Loaded", "Loaded 'AFK Anti-Kick' preset!\n- Key: space (Jump)\n- Interval: 30 seconds\nGo to the Key Spammer tab and press START or F7.")
+        messagebox.showinfo("Preset Loaded", "Loaded 'TDS Anti-AFK' preset!\n- Key: space (Jump)\n- Interval: 30 seconds\nGo to the Key Spammer tab and press START or F7.")
 
     def load_preset_fast_click(self):
         self.select_tab("clicker")
@@ -939,30 +939,25 @@ class RobloxMacroApp(ctk.CTk):
         self.update_cps_val()
         self.mouse_btn_opt.set("Left Click")
         self.double_click_var.set(False)
-        messagebox.showinfo("Preset Loaded", "Loaded 'Hyper Clicks' preset!\n- Speed: 100 CPS\n- Button: Left Click\nGo to the Auto Clicker tab and press START or F6.")
+        messagebox.showinfo("Preset Loaded", "Loaded 'TDS Fast Upgrade/Placement' preset!\n- Speed: 100 CPS\n- Button: Left Click\nGo to the Auto Clicker tab and press START or F6.")
 
-    def load_preset_bee_swarm(self):
-        self.clicker.stop()
-        self.cps_slider.set(15.0)
-        self.update_cps_val()
-        self.mouse_btn_opt.set("Left Click")
-        
-        self.spammer.stop()
+    def load_preset_tds_skip(self):
         self.select_tab("spammer")
         self.spammer_keys_entry.delete(0, tk.END)
-        self.spammer_keys_entry.insert(0, "e")
-        self.spammer_interval_slider.set(0.5)
+        self.spammer_keys_entry.insert(0, "f")
+        self.spammer_interval_slider.set(1.0)
         self.update_interval_val()
-        
-        messagebox.showinfo("Preset Loaded", "Loaded 'Bee Swarm Spammer' preset!\n- Clicker set to 15 CPS (Left Click)\n- Spammer set to spam 'e' key every 0.5s\nStart them using F6 and F7 respectively!")
+        self.spammer_roblox_chk.select()
+        messagebox.showinfo("Preset Loaded", "Loaded 'TDS Auto Skip Wave' preset!\n- Key: f\n- Interval: 1.0 second\nGo to the Key Spammer tab and press START or F7.")
 
-    def load_preset_dance_afk(self):
+    def load_preset_tds_abilities(self):
         self.select_tab("spammer")
         self.spammer_keys_entry.delete(0, tk.END)
-        self.spammer_keys_entry.insert(0, "w,s")
-        self.spammer_interval_slider.set(2.0)
+        self.spammer_keys_entry.insert(0, "1,2,3")
+        self.spammer_interval_slider.set(10.0)
         self.update_interval_val()
-        messagebox.showinfo("Preset Loaded", "Loaded 'Anti-Idle Movement' preset!\n- Keys: w, s (sequentially)\n- Interval: 2.0 seconds\nGo to Key Spammer and press START or F7.")
+        self.spammer_roblox_chk.select()
+        messagebox.showinfo("Preset Loaded", "Loaded 'TDS Commander/DJ Ability Chain' preset!\n- Keys: 1, 2, 3 (sequentially)\n- Interval: 10.0 seconds\nGo to the Key Spammer tab and press START or F7.")
 
     # ================= REPEATABLE STATUS CHECKS =================
 

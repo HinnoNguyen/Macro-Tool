@@ -1,8 +1,8 @@
-# 🎮 Roblox Neo Macro - Ultimate Automation Tool
+# 🎮 Roblox TDS Macro - Tower Defense Simulator Automation Tool
 
 [Tiếng Việt bên dưới](#tiếng-việt)
 
-**Roblox Neo Macro** is a modern, high-performance, and feature-rich desktop automation app built using Python, CustomTkinter, and Pynput. It features a sleek Catppuccin Mocha dark theme with emerald green, neon cyan, and rose accents, tailored specifically for Roblox gamers.
+**Roblox TDS Macro** is a modern, high-performance, and feature-rich desktop automation app built using Python, CustomTkinter, and Pynput. It features a sleek Catppuccin Mocha dark theme with emerald green, neon cyan, and rose accents, tailored specifically for Roblox TDS (Tower Defense Simulator) gamers.
 
 > [!IMPORTANT]
 > 💻 **Platform Support**: **Windows Only**. This tool relies on Windows active window APIs (`ctypes.windll.user32`) for Roblox process targeting and is configured with Windows batch launch scripts.
@@ -34,11 +34,11 @@
 - **Speed Control**: Adjust playback speed from **0.1x** to **10.0x**.
 - **Save/Load**: Save recorded paths to `.json` files.
 
-### 🌟 Game Presets
-- **AFK Anti-Kick**: Spams space every 30s to stay active.
-- **Hyper Clicks**: Sets clicker to 100 CPS.
-- **Bee Swarm Auto-Harvest**: Clicker at 15 CPS and Key Spammer typing `e` every 0.5s.
-- **Anti-Idle Movement (W-S Dance)**: Spams walking forward and backward every 2s.
+### 🌟 TDS Game Presets
+- **TDS Anti-AFK**: Spams Jump (`space`) every 30s to stay active in long matches.
+- **TDS Auto Skip Wave**: Spams `f` key every 1.0s to auto skip waves.
+- **TDS Commander/DJ Ability Chain**: Spams `1,2,3` keys sequentially every 10.0s to chain DJ/Commander abilities.
+- **TDS Fast Upgrade/Placement**: Left clicker set to 100 CPS for rapid tower upgrades/placement.
 
 ---
 
@@ -58,7 +58,7 @@
 
 ## Tiếng Việt
 
-**Roblox Neo Macro** là ứng dụng tự động hóa dành cho máy tính được phát triển bằng Python, CustomTkinter và Pynput với giao diện tối tối hiện đại màu Catppuccin Mocha cực kỳ đẹp mắt, tối ưu hóa riêng cho các game thủ Roblox.
+**Roblox TDS Macro** là ứng dụng tự động hóa dành cho máy tính được phát triển bằng Python, CustomTkinter và Pynput với giao diện tối tối hiện đại màu Catppuccin Mocha cực kỳ đẹp mắt, tối ưu hóa riêng cho các game thủ Roblox TDS (Tower Defense Simulator).
 
 > [!IMPORTANT]
 > 💻 **Hỗ trợ hệ điều hành**: **Chỉ hỗ trợ Windows**. Công cụ này sử dụng API kiểm tra cửa sổ hoạt động của Windows (`ctypes.windll.user32`) để tự động nhận diện game Roblox và đi kèm tệp khởi chạy nhanh `.bat` riêng cho Windows.
@@ -91,10 +91,10 @@
 - **Xuất/Nhập tệp**: Lưu các macro dưới dạng file `.json` để tải lại khi cần.
 
 ### 🌟 Cài đặt sẵn (Presets)
-- **AFK Anti-Kick**: Tự động nhảy mỗi 30 giây tránh bị Roblox kick do treo máy quá 20 phút.
-- **Hyper Clicks**: Click chuột trái với tốc độ siêu nhanh 100 CPS.
-- **Bee Swarm Auto-Harvest**: Kết hợp click 15 CPS và spam phím `e` mỗi 0.5 giây.
-- **Anti-Idle Movement (W-S Dance)**: Spam phím di chuyển tiến lùi `w` và `s` mỗi 2 giây.
+- **TDS Anti-AFK**: Tự động nhảy mỗi 30 giây tránh bị Roblox kích do treo máy trong trận đấu TDS kéo dài.
+- **TDS Auto Skip Wave**: Tự động nhấn phím `f` mỗi 1.0 giây để tự động bỏ qua lượt (skip wave).
+- **TDS Commander/DJ Ability Chain**: Tự động nhấn chuỗi phím `1, 2, 3` mỗi 10.0 giây để tự động kích hoạt kỹ năng Commander/DJ liên tục.
+- **TDS Fast Upgrade/Placement**: Auto clicker chuột trái 100 CPS để nâng cấp hoặc đặt lính cực nhanh.
 
 ---
 
